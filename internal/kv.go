@@ -17,11 +17,10 @@ func (kv *KV) Open() error {
 	ent := Entry{}
 	for {
 		eof, err := kv.log.Read(&ent)
-		if eof {
-			break
-		}
 		if err != nil {
 			return err
+		} else if eof {
+			break
 		}
 
 		if ent.deleted {
@@ -30,7 +29,6 @@ func (kv *KV) Open() error {
 			kv.mem[string(ent.key)] = ent.val
 		}
 	}
-
 	return nil
 }
 
@@ -43,28 +41,25 @@ func (kv *KV) Get(key []byte) (val []byte, ok bool, err error) {
 
 func (kv *KV) Set(key []byte, val []byte) (updated bool, err error) {
 	prev, exist := kv.mem[string(key)]
-	kv.mem[string(key)] = val
 	updated = !exist || !bytes.Equal(prev, val)
 
 	if updated {
-		if err := kv.log.Write(&Entry{key, val, false}); err != nil {
-			return updated, err
+		if err = kv.log.Write(&Entry{key: key, val: val}); err != nil {
+			return false, err
 		}
+		kv.mem[string(key)] = val
 	}
-
 	return
 }
 
 func (kv *KV) Del(key []byte) (deleted bool, err error) {
 	_, deleted = kv.mem[string(key)]
-	delete(kv.mem, string(key))
-
 	if deleted {
-		if err := kv.log.Write(&Entry{key, nil, true}); err != nil {
-			return deleted, err
+		if err = kv.log.Write(&Entry{key: key, deleted: true}); err != nil {
+			return false, err
 		}
+		delete(kv.mem, string(key))
 	}
-
 	return
 }
 
