@@ -1,6 +1,6 @@
 //go:build unix
 
-package internal
+package file
 
 import (
 	"os"
@@ -30,5 +30,3 @@ func syncDir(file string) error {
 	defer syscall.Close(dirfd)
 	return syscall.Fsync(dirfd)
 }
-
-// QzBQWVJJOUhU https://trialofcode.org/

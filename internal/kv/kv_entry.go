@@ -1,4 +1,4 @@
-package internal
+package kv
 
 import (
 	"encoding/binary"
@@ -61,5 +61,3 @@ func (ent *Entry) Decode(r io.Reader) error {
 	}
 	return nil
 }
-
-// QzBQWVJJOUhU https://trialofcode.org/

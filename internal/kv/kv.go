@@ -1,6 +1,15 @@
-package internal
+package kv
 
-import "bytes"
+import (
+	"bytes"
+)
+
+type Log interface {
+	Open() error
+	Close() error
+	Read(*Entry) (bool, error)
+	Write(*Entry) error
+}
 
 type KV struct {
 	log Log
@@ -62,5 +71,3 @@ func (kv *KV) Del(key []byte) (deleted bool, err error) {
 	}
 	return
 }
-
-// QzBQWVJJOUhU https://trialofcode.org/
