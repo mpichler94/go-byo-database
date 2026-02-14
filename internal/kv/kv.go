@@ -4,13 +4,6 @@ import (
 	"bytes"
 )
 
-type Log interface {
-	Open() error
-	Close() error
-	Read(*Entry) (bool, error)
-	Write(*Entry) error
-}
-
 type KV struct {
 	log Log
 	mem map[string][]byte
@@ -48,9 +41,23 @@ func (kv *KV) Get(key []byte) (val []byte, ok bool, err error) {
 	return
 }
 
-func (kv *KV) Set(key []byte, val []byte) (updated bool, err error) {
+type UpdateMode int
+
+const (
+	ModeUpsert UpdateMode = 0
+	ModeInsert UpdateMode = 1
+	ModeUpdate UpdateMode = 2
+)
+
+func (kv *KV) SetEx(key []byte, val []byte, mode UpdateMode) (updated bool, err error) {
 	prev, exist := kv.mem[string(key)]
 	updated = !exist || !bytes.Equal(prev, val)
+
+	if mode == ModeInsert && exist {
+		return false, nil
+	} else if mode == ModeUpdate && !exist {
+		return false, nil
+	}
 
 	if updated {
 		if err = kv.log.Write(&Entry{key: key, val: val}); err != nil {
@@ -59,6 +66,10 @@ func (kv *KV) Set(key []byte, val []byte) (updated bool, err error) {
 		kv.mem[string(key)] = val
 	}
 	return
+}
+
+func (kv *KV) Set(key []byte, val []byte) (updated bool, err error) {
+	return kv.SetEx(key, val, ModeUpsert)
 }
 
 func (kv *KV) Del(key []byte) (deleted bool, err error) {

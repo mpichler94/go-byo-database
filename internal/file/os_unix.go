@@ -9,7 +9,7 @@ import (
 )
 
 // open or create a file and fsync the directory
-func createFileSync(file string) (*os.File, error) {
+func CreateFileSync(file string) (*os.File, error) {
 	fp, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE, 0o644)
 	if err != nil {
 		return nil, err
